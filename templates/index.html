@@ -1,0 +1,48 @@
+{% extends "_base.html" %}
+{% block content %}
+<section class="hero">
+  <h1 class="hero__title">Object Detection Demo</h1>
+  <p class="hero__sub">
+    FastAPI on Raspberry Pi 4 — optimized UI for 3.5" LCD (480×320).
+  </p>
+</section>
+
+<section class="grid">
+  <a class="card" href="/upload">
+    <div class="card__icon">🖼️</div>
+    <div class="card__body">
+      <div class="card__title">Upload Mode</div>
+      <div class="card__desc">Send an image → get annotated result (next step).</div>
+    </div>
+  </a>
+
+  <a class="card" href="/live">
+    <div class="card__icon">📷</div>
+    <div class="card__body">
+      <div class="card__title">Live Stream</div>
+      <div class="card__desc">See Pi Camera preview in real-time (works now).</div>
+    </div>
+  </a>
+
+  <a class="card" href="/settings">
+    <div class="card__icon">⚙️</div>
+    <div class="card__body">
+      <div class="card__title">Settings</div>
+      <div class="card__desc">Camera & performance options (we’ll add later).</div>
+    </div>
+  </a>
+</section>
+
+<section class="panel">
+  <div class="panel__row">
+    <div class="kv">
+      <div class="kv__k">Status</div>
+      <div class="kv__v">UI ready • Camera preview next</div>
+    </div>
+    <div class="kv">
+      <div class="kv__k">Target</div>
+      <div class="kv__v">Raspberry Pi LCD 3.5"</div>
+    </div>
+  </div>
+</section>
+{% endblock %}

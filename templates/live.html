@@ -1,0 +1,39 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 class="pageTitle">Live Stream</h1>
+
+<div class="panel">
+  <div class="panel__row panel__row--stack">
+    <div class="stream">
+      <div class="stream__top">
+        <div class="stream__title">Pi Camera Preview</div>
+        <div class="stream__meta" id="streamMeta">Connecting…</div>
+      </div>
+
+      <div class="stream__frame">
+        <img id="mjpeg" src="/camera/mjpeg?ts={{ ts }}" alt="Pi Camera Stream" />
+      </div>
+
+      <div class="stream__actions">
+        <button class="btn" id="btnReload" type="button">Reload</button>
+        <button class="btn btn--ghost" id="btnSnapshot" type="button">Snapshot</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="kv">
+        <div class="kv__k">Tip</div>
+        <div class="kv__v">If stream is blank, check camera enable + Picamera2 install.</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Endpoint</div>
+        <div class="kv__v"><code>/camera/mjpeg</code></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/live.js"></script>
+{% endblock %}

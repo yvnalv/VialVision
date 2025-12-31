@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>{{ title or "VialVision Demo" }}</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="nav__left">
+      <a class="brand" href="/">VialVision</a>
+      <span class="badge">Pi</span>
+    </div>
+
+    <nav class="nav__links">
+      <a href="/" class="{{ 'active' if active=='home' else '' }}">Home</a>
+      <a href="/upload" class="{{ 'active' if active=='upload' else '' }}">Upload</a>
+      <a href="/live" class="{{ 'active' if active=='live' else '' }}">Live</a>
+      <a href="/settings" class="{{ 'active' if active=='settings' else '' }}">Settings</a>
+    </nav>
+
+    <div class="nav__right">
+      <button id="themeBtn" class="btn btn--ghost" type="button" aria-label="Toggle theme">
+        <span id="themeIcon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="/static/js/theme.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
