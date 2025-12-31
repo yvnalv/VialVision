@@ -10,30 +10,15 @@ import cv2
 
 
 class CameraManager:
-    """
-    Raspberry Pi Camera Module 3 (IMX708) using Picamera2/libcamera.
-
-    Key goals:
-    - Colors match rpicam-hello output (no RGB/BGR confusion)
-    - Continuous autofocus like: rpicam-hello --autofocus-mode continuous
-    - Frames are standardized to RGB for web streaming
-    - JPEG encoded via PIL (prevents OpenCV channel issues)
-    """
-
     def __init__(self):
         self._lock = threading.Lock()
         self._running = False
         self._thread: Optional[threading.Thread] = None
-        self._last_frame_rgb: Optional[np.ndarray] = None  # ALWAYS RGB HxWx3 uint8
+        self._last_frame_rgb: Optional[np.ndarray] = None  # ALWAYS RGB
 
         self._use_picamera2 = False
         self._picam2 = None
-        self._cap = None  # optional USB cam fallback
-
-        # Keep these so you can expose them in Settings later
-        self.width = 640
-        self.height = 480
-        self.fps = 20
+        self._cap = None
 
     def start(self, width: int = 640, height: int = 480, fps: int = 20) -> None:
         with self._lock:
@@ -41,41 +26,30 @@ class CameraManager:
                 return
             self._running = True
 
-        self.width, self.height, self.fps = width, height, fps
-
-        # Prefer Picamera2 for CSI camera
         try:
             from picamera2 import Picamera2  # type: ignore
 
             self._picam2 = Picamera2()
 
-            # Capture as RGB888 so our pipeline stays consistent
+            # IMPORTANT: On your system, colors match reality when we treat capture as BGR
             config = self._picam2.create_video_configuration(
-                main={"size": (width, height), "format": "RGB888"},
+                main={"size": (width, height), "format": "BGR888"},
                 controls={
-                    # Match rpicam-hello behavior:
-                    # - AE enabled (default True on your device)
-                    # - AWB enabled
-                    # - AWB Mode auto
-                    # - AF continuous
                     "AeEnable": True,
                     "AwbEnable": True,
-                    "AwbMode": 0,   # 0 = Auto
-                    "AfMode": 2,    # 2 = Continuous (range 0..2)
-                    "AfSpeed": 1,   # 1 = Fast (range 0..1) optional
+                    "AwbMode": 0,   # Auto
+                    "AfMode": 2,    # Continuous
+                    "AfSpeed": 1,   # Fast
                 }
             )
-
             self._picam2.configure(config)
             self._picam2.start()
             self._use_picamera2 = True
-            print("[Camera] Picamera2 started (RGB888, AF continuous, AWB auto, AE on)")
+            print("[Camera] Picamera2 started (BGR888 capture -> converted to RGB for web)")
 
         except Exception as e:
-            # Optional fallback for USB cam (won't work for CSI camera)
             print(f"[Camera] Picamera2 failed -> OpenCV fallback. Reason: {e}")
             self._use_picamera2 = False
-
             self._cap = cv2.VideoCapture(0)
             self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
             self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -119,21 +93,16 @@ class CameraManager:
             time.sleep(delay)
 
     def _read_frame_rgb(self) -> Optional[np.ndarray]:
-        """
-        Returns RGB uint8 (H,W,3).
-        """
         try:
             if self._use_picamera2 and self._picam2 is not None:
-                frame = self._picam2.capture_array()
+                frame = self._picam2.capture_array()  # BGR on your build
 
-                # Handle 4-channel frames defensively (rare)
                 if frame.ndim == 3 and frame.shape[2] == 4:
                     frame = frame[:, :, :3]
 
-                if frame.dtype != np.uint8:
-                    frame = frame.astype(np.uint8)
-
-                return frame  # RGB
+                # FIX: convert BGR -> RGB (removes bluish tint / channel swap)
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                return rgb
 
             if self._cap is not None:
                 ok, bgr = self._cap.read()
@@ -148,10 +117,6 @@ class CameraManager:
         return None
 
     def get_jpeg(self, quality: int = 80) -> Optional[bytes]:
-        """
-        Encode last RGB frame to JPEG bytes using PIL.
-        This avoids any OpenCV BGR assumptions and preserves correct colors.
-        """
         frame_rgb = self._last_frame_rgb
         if frame_rgb is None:
             return None
@@ -164,7 +129,6 @@ class CameraManager:
             buf = io.BytesIO()
             img.save(buf, format="JPEG", quality=int(quality))
             return buf.getvalue()
-
         except Exception:
             return None
 
