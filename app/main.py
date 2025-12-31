@@ -17,8 +17,11 @@ app.include_router(camera_router)
 
 @app.on_event("startup")
 def _startup():
-    camera.start(width=640, height=480, fps=20)
-    live_detector.start(fps=10)
+    # camera.start(width=640, height=480, fps=20)
+    # live_detector.start(fps=10)
+    
+    camera.start(width=480, height=360, fps=20)
+    live_detector.start(fps=12)
 
 
 @app.on_event("shutdown")

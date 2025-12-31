@@ -65,11 +65,13 @@ def mjpeg_detect():
                 time.sleep(0.1)
                 continue
 
-            jpg = rgb_to_jpeg_bytes(frame, quality=80)
+            # jpg = rgb_to_jpeg_bytes(frame, quality=80)
+            jpg = rgb_to_jpeg_bytes(frame, quality=70)
             yield boundary + b"\r\n"
             yield b"Content-Type: image/jpeg\r\n"
             yield f"Content-Length: {len(jpg)}\r\n\r\n".encode()
             yield jpg + b"\r\n"
-            time.sleep(0.03)
+            # time.sleep(0.03)
+            time.sleep(0.08)  # ~12.5 FPS
 
     return StreamingResponse(gen(), media_type="multipart/x-mixed-replace; boundary=frame")
