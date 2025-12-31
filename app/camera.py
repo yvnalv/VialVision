@@ -37,9 +37,14 @@ class CameraManager:
             from picamera2 import Picamera2  # type: ignore
 
             self._picam2 = Picamera2()
+            # config = self._picam2.create_video_configuration(
+            #     main={"size": (width, height), "format": "RGB888"}
+            # )
+
             config = self._picam2.create_video_configuration(
-                main={"size": (width, height), "format": "RGB888"}
+                main={"size": (width, height), "format": "BGR888"}
             )
+
             self._picam2.configure(config)
             self._picam2.start()
             self._use_picamera2 = True
@@ -92,9 +97,9 @@ class CameraManager:
     def _read_frame(self) -> Optional[np.ndarray]:
         try:
             if self._use_picamera2 and self._picam2 is not None:
-                rgb = self._picam2.capture_array()  # RGB
-                bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+                bgr = self._picam2.capture_array()  # BGR
                 return bgr
+
             if self._cap is not None:
                 ok, frame = self._cap.read()
                 return frame if ok else None
