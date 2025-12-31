@@ -1,8 +1,39 @@
 {% extends "_base.html" %}
 {% block content %}
 <h1 class="pageTitle">Upload Mode</h1>
+
 <div class="panel">
-  <p class="muted">Next step: implement /predict + YOLO inference.</p>
-  <div class="pill">Coming soon</div>
+  <div class="upload">
+    <label class="file">
+      <input id="fileInput" type="file" accept="image/*" />
+      <span class="file__btn">Choose Image</span>
+      <span class="file__name" id="fileName">No file selected</span>
+    </label>
+
+    <div class="upload__actions">
+      <button class="btn" id="btnPredict" type="button">Run Detection</button>
+      <button class="btn btn--ghost" id="btnClear" type="button">Clear</button>
+    </div>
+
+    <div class="upload__result">
+      <div class="upload__preview">
+        <div class="muted">Annotated Output</div>
+        <div class="frame">
+          <img id="imgResult" alt="result" />
+        </div>
+      </div>
+
+      <div class="upload__json">
+        <div class="muted">Detections</div>
+        <pre id="predJson">{}</pre>
+      </div>
+    </div>
+
+    <div class="muted" id="statusText"></div>
+  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/upload.js"></script>
 {% endblock %}

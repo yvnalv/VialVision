@@ -211,3 +211,43 @@ html[data-theme="light"] .nav{ background: rgba(255,255,255,.92); }
   .grid{ grid-template-columns: 1fr 1fr 1fr; }
   .hero__title{ font-size: 26px; }
 }
+
+
+.upload { display:flex; flex-direction:column; gap:12px; }
+.file { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.file input { display:none; }
+.file__btn{
+  display:inline-block;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  box-shadow: var(--shadow);
+  font-weight: 700;
+}
+.file__name{ color: var(--muted); font-size: 13px; }
+
+.upload__actions{ display:flex; gap:10px; flex-wrap:wrap; }
+.upload__result{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.frame{
+  margin-top: 6px;
+  background:#000;
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  overflow:hidden;
+}
+.frame img{
+  width:100%;
+  display:block;
+  height:auto;
+  max-height: 55vh;
+  object-fit: contain;
+}
+
+@media (min-width: 720px){
+  .upload__result{ grid-template-columns: 1.2fr 1fr; }
+}
