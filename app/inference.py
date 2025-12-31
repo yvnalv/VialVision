@@ -71,4 +71,5 @@ def pil_to_base64_jpeg(img: Image.Image, quality: int = 85) -> str:
 
 
 # Singleton instance (best practice)
-yolo = YoloService("models/yolov8n.pt")
+yolo = YoloService("models/best.pt")
+# yolo = YoloService("models/yolov8n.pt")
