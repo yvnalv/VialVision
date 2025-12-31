@@ -14,11 +14,17 @@ class CameraManager:
         self._lock = threading.Lock()
         self._running = False
         self._thread: Optional[threading.Thread] = None
-        self._last_frame_rgb: Optional[np.ndarray] = None  # ALWAYS RGB
 
         self._use_picamera2 = False
         self._picam2 = None
         self._cap = None
+
+        # store always as RGB for PIL encoding
+        self._last_frame_rgb: Optional[np.ndarray] = None
+
+        # IMPORTANT: if web view is blueish, turn this ON
+        # (it swaps R<->B, fixing "wood looks blue")
+        self.swap_rb: bool = True
 
     def start(self, width: int = 640, height: int = 480, fps: int = 20) -> None:
         with self._lock:
@@ -31,9 +37,9 @@ class CameraManager:
 
             self._picam2 = Picamera2()
 
-            # IMPORTANT: On your system, colors match reality when we treat capture as BGR
+            # Request a stable 3-channel format from libcamera
             config = self._picam2.create_video_configuration(
-                main={"size": (width, height), "format": "BGR888"},
+                main={"size": (width, height), "format": "RGB888"},
                 controls={
                     "AeEnable": True,
                     "AwbEnable": True,
@@ -45,11 +51,12 @@ class CameraManager:
             self._picam2.configure(config)
             self._picam2.start()
             self._use_picamera2 = True
-            print("[Camera] Picamera2 started (BGR888 capture -> converted to RGB for web)")
+            print("[Camera] Picamera2 started (RGB888). swap_rb =", self.swap_rb)
 
         except Exception as e:
             print(f"[Camera] Picamera2 failed -> OpenCV fallback. Reason: {e}")
             self._use_picamera2 = False
+
             self._cap = cv2.VideoCapture(0)
             self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
             self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -93,16 +100,26 @@ class CameraManager:
             time.sleep(delay)
 
     def _read_frame_rgb(self) -> Optional[np.ndarray]:
+        """
+        Returns RGB uint8 frame (H,W,3).
+        """
         try:
             if self._use_picamera2 and self._picam2 is not None:
-                frame = self._picam2.capture_array()  # BGR on your build
+                frame = self._picam2.capture_array()
 
+                # If 4 channels appear, drop alpha/X channel
                 if frame.ndim == 3 and frame.shape[2] == 4:
                     frame = frame[:, :, :3]
 
-                # FIX: convert BGR -> RGB (removes bluish tint / channel swap)
-                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                return rgb
+                if frame.dtype != np.uint8:
+                    frame = frame.astype(np.uint8)
+
+                # Some Pi builds deliver swapped channels even when asking RGB888.
+                # swap_rb=True fixes "blueish" output (wood->blue).
+                if self.swap_rb:
+                    frame = frame[:, :, ::-1]  # swap R<->B
+
+                return frame  # now RGB
 
             if self._cap is not None:
                 ok, bgr = self._cap.read()
@@ -117,6 +134,9 @@ class CameraManager:
         return None
 
     def get_jpeg(self, quality: int = 80) -> Optional[bytes]:
+        """
+        Encode RGB frame using PIL to avoid OpenCV channel assumptions.
+        """
         frame_rgb = self._last_frame_rgb
         if frame_rgb is None:
             return None
