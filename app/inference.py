@@ -46,10 +46,20 @@ class YoloService:
                     )
                 )
 
-        # Ultralytics plot() returns BGR (numpy)
-        annotated_bgr = r.plot()
-        annotated_rgb = annotated_bgr[..., ::-1]
-        annotated_pil = Image.fromarray(annotated_rgb)
+        # --- Color safety: some builds return plot() in BGR, some in RGB.
+        # If your output looks blueish, set SWAP_RB_PLOT = False.
+        SWAP_RB_PLOT = False  # <-- IMPORTANT: this fixes your blueish output
+
+        annotated = r.plot()  # numpy image
+        # Ensure 3 channels
+        if annotated.ndim == 3 and annotated.shape[2] == 4:
+            annotated = annotated[:, :, :3]
+
+        # If plot() is BGR, swap to RGB; if plot() already RGB, do not swap.
+        if SWAP_RB_PLOT:
+            annotated = annotated[:, :, ::-1]
+
+        annotated_pil = Image.fromarray(annotated.astype(np.uint8), mode="RGB")
 
         return dets, annotated_pil
 
